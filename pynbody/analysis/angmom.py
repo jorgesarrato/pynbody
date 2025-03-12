@@ -142,7 +142,7 @@ def calc_faceon_matrix(angmom_vec, up=[0.0, 1.0, 0.0]):
 
 
 def align(h, vec_to_xform, disk_size="5 kpc", move_all=True, already_centered = False,
-           center_kwargs = None):
+           center_kwargs = None, use_stars = False):
     """Reposition and rotate the ancestor of h to place the angular momentum into a specified orientation.
 
     The routine first calls the center routine to reposition the halo (unless already_centered is True).
@@ -200,12 +200,20 @@ def align(h, vec_to_xform, disk_size="5 kpc", move_all=True, already_centered = 
         tx = halo.center(h_for_centering, **center_kwargs)
 
     try:
-        if len(h.gas) > 5:
-            cen = h.gas[filt.Sphere(disk_size)]
-        elif len(h.st) > 5:
-            cen = h.st[filt.Sphere(disk_size)]
+        if use_stars:
+            if len(h.st) > 5:
+                cen = h.st[filt.Sphere(disk_size)]
+            elif len(h.gas) > 5:
+                cen = h.gas[filt.Sphere(disk_size)]
+            else:
+                cen = h[filt.Sphere(disk_size)]
         else:
-            cen = h[filt.Sphere(disk_size)]
+            if len(h.gas) > 5:
+                cen = h.gas[filt.Sphere(disk_size)]
+            elif len(h.st) > 5:
+                cen = h.st[filt.Sphere(disk_size)]
+            else:
+                cen = h[filt.Sphere(disk_size)]
 
         logger.info("Calculating angular momentum vector...")
         trans = vec_to_xform(ang_mom_vec(cen))
