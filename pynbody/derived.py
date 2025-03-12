@@ -122,8 +122,7 @@ _op_dict = {"mean": "mean velocity",
             "div": "velocity divergence",
             }
 
-
-def _v_sph_operation(self, op):
+def _v_sph_operation(self, op, qty='vel'):
     """SPH-smoothed velocity operations"""
     self.build_tree()
 
@@ -132,9 +131,9 @@ def _v_sph_operation(self, op):
     logger.info('Calculating %s with %d nearest neighbours' % (_op_dict[op], nsmooth))
 
     if op in ['mean', 'curl']:
-        sm = array.SimArray(np.empty_like(self['vel']), self['vel'].units)
+        sm = array.SimArray(np.empty_like(self[qty]), self[qty].units)
     else:
-        sm = array.SimArray(np.empty(len(self['vel']), dtype=self['vel'].dtype), self['vel'].units)
+        sm = array.SimArray(np.empty(len(self[qty]), dtype=self[qty].dtype), self[qty].units)
 
     if op in ['div', 'curl']:
         sm.units /= self['pos'].units
@@ -142,7 +141,7 @@ def _v_sph_operation(self, op):
     self.kdtree.set_array_ref('rho', self['rho'])
     self.kdtree.set_array_ref('smooth', self['smooth'])
     self.kdtree.set_array_ref('mass', self['mass'])
-    self.kdtree.set_array_ref('qty', self['vel'])
+    self.kdtree.set_array_ref('qty', self[qty])
     self.kdtree.set_array_ref('qty_sm', sm)
 
     start = time.time()
@@ -163,6 +162,11 @@ def v_mean(self):
 def v_disp(self):
     """SPH-smoothed velocity dispersion"""
     return _v_sph_operation(self, "disp")
+
+@SimSnap.derived_array
+def vz_disp(self):
+    """SPH-smoothed velocity dispersion for vz"""
+    return _v_sph_operation(self, "disp", qty='vz')
 
 @SimSnap.derived_array
 def v_curl(self):
