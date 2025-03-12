@@ -541,7 +541,7 @@ def halo_lum(sim, band, physical_units=True):
     return np.sum(10.0 ** ((- sim.star[band + '_mag']) / 2.5)) * norm
 
 
-def half_light_r(sim, band='V', cylindrical=False):
+def half_light_r(sim, band='V', cylindrical=False, mode='luminosity'):
     '''Calculate half-light radius
 
     Calculates entire luminosity of the provided snapshot, finds half that, sorts
@@ -562,8 +562,20 @@ def half_light_r(sim, band='V', cylindrical=False):
     cylindrical : bool
         If True, the radius is calculated in the cylindrical xy-plane coordinates.
 
+    mode: str
+        If 'luminosity', the half-light radius is calculated based on the luminosity of the stars.
+        If 'mass', the half-light radius is calculated based on the mass of the stars.
+        If 'number', the half-light radius is calculated based on the number of stars.
+
     '''
-    half_l = halo_lum(sim, band=band, physical_units=False) * 0.5
+    if mode == 'luminosity':
+        half_l = halo_lum(sim, band=band, physical_units=False) * 0.5
+    elif mode == 'mass':
+        half_l = np.sum(sim.s['mass']) * 0.5
+    elif mode == 'number':
+        half_l = len(sim.s) * 0.5
+    else:
+        raise ValueError(f"Unknown mode {mode}. Valid modes are: luminosity, mass, number")
 
     if cylindrical:
         coord = 'rxy'
@@ -573,7 +585,14 @@ def half_light_r(sim, band='V', cylindrical=False):
     test_r = 0.5 * max_high_r
     testrf = filt.LowPass(coord, test_r)
     min_low_r = 0.0
-    test_l = halo_lum(sim[testrf], band=band, physical_units=False)
+
+    if mode == 'luminosity':
+        test_l = halo_lum(sim[testrf], band=band, physical_units=False)
+    elif mode == 'mass':
+        test_l = np.sum(sim[testrf].s['mass'])
+    elif mode == 'number':
+        test_l = len(sim[testrf].s)
+
     it = 0
     while ((np.abs(test_l - half_l) / half_l) > 0.01):
         it = it + 1
@@ -585,7 +604,13 @@ def half_light_r(sim, band='V', cylindrical=False):
         else:
             test_r = (test_r + max_high_r) * 0.5
         testrf = filt.LowPass(coord, test_r)
-        test_l = halo_lum(sim[testrf], band=band, physical_units=False)
+
+        if mode == 'luminosity':
+            test_l = halo_lum(sim[testrf], band=band, physical_units=False)
+        elif mode == 'mass':
+            test_l = np.sum(sim[testrf].s['mass'])
+        elif mode == 'number':
+            test_l = len(sim[testrf].s)
 
         if (test_l > half_l):
             max_high_r = test_r
