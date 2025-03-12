@@ -207,6 +207,7 @@ def align(h, vec_to_xform, disk_size="5 kpc", move_all=True, already_centered = 
                 cen = h.gas[filt.Sphere(disk_size)]
             else:
                 cen = h[filt.Sphere(disk_size)]
+                logger.warning("Using all particles, including dark matter, for alignment.")
         else:
             if len(h.gas) > 5:
                 cen = h.gas[filt.Sphere(disk_size)]
@@ -214,6 +215,7 @@ def align(h, vec_to_xform, disk_size="5 kpc", move_all=True, already_centered = 
                 cen = h.st[filt.Sphere(disk_size)]
             else:
                 cen = h[filt.Sphere(disk_size)]
+                logger.warning("Using all particles, including dark matter, for alignment.")
 
         logger.info("Calculating angular momentum vector...")
         trans = vec_to_xform(ang_mom_vec(cen))
